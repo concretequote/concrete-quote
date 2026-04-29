@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#f5a623"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CQP"/>
+<title>Concrete Quote Pro</title>
+
+<!-- PWA Manifest embedded as data URI -->
+<link rel="manifest" href="data:application/manifest+json,{
+  %22name%22:%22Concrete Quote Pro%22,
+  %22short_name%22:%22CQP%22,
+  %22description%22:%22GTA Concrete Contractor Estimator%22,
+  %22start_url%22:%22.%22,
+  %22display%22:%22standalone%22,
+  %22background_color%22:%22%230c0c0c%22,
+  %22theme_color%22:%22%23f5a623%22,
+  %22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230c0c0c' rx='80'/%3E%3Ctext x='256' y='330' font-size='280' text-anchor='middle'%3E🏗️%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22}]
+}"/>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;background:#0c0c0c;}
+  body{font-family:'DM Sans',sans-serif;color:#fff;}
+  input[type=number]{-moz-appearance:textfield;}
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+  select option{background:#141414;}
+  ::-webkit-scrollbar{width:3px;}
+  ::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px;}
+
+  /* Layout */
+  #root{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+  .header{background:#0f0f0f;border-bottom:1px solid #1e1800;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .logo-wrap{display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#f5a623,#c96f10);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .logo-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.02em;}
+  .logo-sub{font-size:8px;color:#555;letter-spacing:0.12em;}
+  .profit-badge{background:#1e1500;border:1px solid #f5a62340;border-radius:8px;padding:4px 12px;text-align:center;}
+  .profit-badge-label{font-size:8px;color:#f5a62388;letter-spacing:0.12em;}
+  .profit-badge-num{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#f5a623;line-height:1;}
+  .profit-badge-sub{font-size:7px;color:#555;}
+
+  /* Tabs for mobile */
+  .tabs{display:flex;background:#0f0f0f;border-bottom:1px solid #1e1e1e;flex-shrink:0;}
+  .tab{flex:1;padding:10px;text-align:center;font-size:11px;font-weight:700;letter-spacing:0.06em;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+  .tab.active{color:#f5a623;border-bottom-color:#f5a623;}
+  .tab.inactive{color:#555;}
+
+  /* Panels */
+  .panel{flex:1;overflow-y:auto;padding:12px 14px;-webkit-overflow-scrolling:touch;}
+
+  /* Section label */
+  .section-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#f5a623;margin-bottom:7px;margin-top:14px;}
+  .section-label:first-child{margin-top:4px;}
+
+  /* Preset buttons */
+  .presets{display:flex;gap:5px;margin-bottom:10px;}
+  .preset-btn{flex:1;padding:8px 4px;border-radius:6px;border:none;cursor:pointer;font-size:9px;font-family:'DM Mono',monospace;line-height:1.4;text-align:center;transition:all .2s;}
+
+  /* Input */
+  .input-group{margin-bottom:10px;}
+  .input-label-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+  .input-label{font-size:10px;color:#888;letter-spacing:0.07em;}
+  .input-help{font-size:8px;color:#555;}
+  .input-wrap{display:flex;align-items:center;background:#141414;border:1px solid #252525;border-radius:6px;}
+  .input-wrap input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:15px;font-family:'DM Mono',monospace;padding:9px 12px;}
+  .input-suffix{padding:0 10px;color:#555;font-size:11px;}
+  .input-wrap select{width:100%;background:transparent;border:none;outline:none;color:#fff;font-size:13px;font-family:'DM Mono',monospace;padding:9px 12px;}
+
+  /* Toggle */
+  .toggle-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;}
+  .toggle-track{width:36px;height:20px;border-radius:10px;position:relative;flex-shrink:0;margin-top:2px;transition:background .2s;}
+  .toggle-thumb{position:absolute;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;}
+  .toggle-label{font-size:12px;}
+  .toggle-sub{font-size:9px;color:#444;margin-top:1px;}
+
+  /* Depth bar */
+  .depth-bar-wrap{margin-bottom:10px;}
+  .depth-bar{border-radius:6px;overflow:hidden;border:1px solid #2a2a2a;display:flex;height:30px;}
+  .depth-seg-concrete{background:linear-gradient(180deg,#4a7f96,#2f5e72);display:flex;align-items:center;justify-content:center;}
+  .depth-seg-gravel{background:linear-gradient(180deg,#7a6030,#5a4020);display:flex;align-items:center;justify-content:center;}
+  .depth-seg-label{font-size:9px;color:#fff;font-family:'DM Mono',monospace;white-space:nowrap;}
+  .depth-note{font-size:8px;color:#444;margin-top:3px;}
+
+  /* Dig info box */
+  .dig-info{background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:10px;margin-bottom:10px;}
+  .dig-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;}
+  .dig-cell-label{font-size:8px;color:#555;letter-spacing:0.08em;}
+  .dig-cell-val{font-family:'DM Mono',monospace;font-size:18px;color:#f5a623;font-weight:700;}
+
+  /* Snapshot grid */
+  .snapshot{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;background:#111;border:1px solid #1c1c1c;border-radius:8px;padding:10px 12px;margin-bottom:4px;}
+  .snap-k{font-size:8px;color:#444;letter-spacing:0.1em;}
+  .snap-v{font-size:10px;color:#bbb;font-family:'DM Mono',monospace;line-height:1.4;}
+
+  /* Trip calculator */
+  .trip-box{background:#0f0f0f;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:8px;}
+  .trip-header{font-size:9px;font-weight:700;letter-spacing:0.14em;color:#f5a623;margin-bottom:10px;}
+  .trip-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px;}
+  .trip-stat{background:#181818;border:1px solid #222;border-radius:6px;padding:6px;text-align:center;}
+  .trip-stat-k{font-size:7px;color:#555;letter-spacing:0.1em;margin-bottom:2px;}
+  .trip-stat-v{font-family:'DM Mono',monospace;font-size:12px;color:#ccc;}
+  .trip-dots{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+  .trip-dot{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,#c96f10,#8a4a08);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-family:'DM Mono',monospace;font-weight:700;}
+  .trip-summary{font-size:11px;color:#888;margin-bottom:8px;}
+  .trip-bar-row{margin-bottom:5px;}
+  .trip-bar-label{display:flex;justify-content:space-between;font-size:9px;color:#666;margin-bottom:2px;}
+  .trip-bar-track{height:5px;background:#252525;border-radius:3px;overflow:hidden;}
+  .trip-bar-fill{height:100%;border-radius:3px;}
+
+  /* Breakdown */
+  .breakdown{background:#111;border:1px solid #1c1c1c;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+  .cat-label{font-size:8px;color:#f5a62366;letter-spacing:0.1em;margin-top:8px;margin-bottom:3px;}
+  .cat-label:first-child{margin-top:0;}
+  .cost-row{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px solid #161616;}
+  .cost-row.indented{padding-left:8px;}
+  .cost-row.bold{border-bottom-color:#2a2000;}
+  .cost-label{font-size:10px;color:#666;}
+  .cost-label.bold{font-size:11px;color:#ccc;font-weight:700;}
+  .cost-sub{font-size:8px;color:#444;margin-left:4px;}
+  .cost-val{font-family:'DM Mono',monospace;font-size:10px;color:#888;}
+  .cost-val.bold{font-size:12px;color:#eee;font-weight:700;}
+
+  /* Profit highlight */
+  .profit-row{margin-top:6px;background:#1e1500;border:1px solid #f5a62330;border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;}
+  .profit-row-label{font-size:12px;color:#f5c060;font-weight:700;}
+  .profit-row-sub{font-size:8px;color:#7a6020;}
+  .profit-row-val{font-family:'DM Mono',monospace;font-size:15px;color:#f5a623;font-weight:700;}
+
+  /* Grand total */
+  .grand-total{background:linear-gradient(135deg,#1a1200,#261c00);border:2px solid #f5a62340;border-radius:10px;padding:16px;text-align:center;margin-bottom:10px;}
+  .grand-label{font-size:8px;color:#f5a623;letter-spacing:0.2em;margin-bottom:5px;}
+  .grand-amount{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#f5a623;letter-spacing:-0.03em;}
+  .grand-stats{display:flex;justify-content:center;gap:14px;margin-top:8px;flex-wrap:wrap;}
+  .grand-stat-k{font-size:7px;color:#555;letter-spacing:0.1em;}
+  .grand-stat-v{font-size:11px;color:#aaa;font-family:'DM Mono',monospace;}
+  .grand-stat-v.highlight{color:#f5a623;font-weight:700;}
+
+  /* Disclaimer */
+  .disclaimer{padding:8px 10px;background:#0e0e0e;border-radius:6px;border:1px solid #181818;margin-bottom:20px;font-size:8.5px;color:#3a3a3a;line-height:1.6;}
+
+  /* Custom warning */
+  .custom-warn{font-size:10px;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-family:'DM Mono',monospace;}
+
+  /* Empty state */
+  .empty{color:#333;text-align:center;margin-top:60px;font-size:14px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+const P = {
+  concrete: {
+    "20-25 MPa (Plain Broom)": 240,
+    "30-35 MPa (Stamped / Exposed)": 265,
+    "40+ MPa (High Strength)": 290,
+  },
+  concreteDelivery: 125,
+  concreteWaste: 0.10,
+  gravelPerTonne: 42,
+  gravelCompactionFactor: 1.30,
+  gravelDensity: 1.8,
+  rebarStickCost: 3.30,
+  rebarStickFt: 10,
+  rebarSpacingIn: 18,
+  rebarWaste: 0.10,
+  formBoardCost: 6.60,
+  formBoardFt: 8,
+  formWaste: 0.15,
+  generalLabour: 150,
+  pickupTruck: 150,
+  bobcatTrailer: 350,
+  trailerCapacityLb: 10000,
+  dumpBin: 500,
+  binYards: 14,
+  plateCompactor: 95,
+  jackhammer: 135,
+  stampRental: 150,
+  haltonfeePerTrip: 10,
+  colorHardenerPerSqft: 0.55,
+  releaseAgentPerSqft: 0.18,
+  sealerStamped: 0.35,
+  sealerExposed: 0.30,
+  soilLbPerCuFt: 100,
+  PROFIT_RATE: 0.30,
+};
+
+const DIG_PRESETS = [
+  { label:'8″ (4″ gravel\n+ 4″ concrete)', totalIn:8,  gravelIn:4 },
+  { label:'10″ (5″ gravel\n+ 5″ concrete)', totalIn:10, gravelIn:5 },
+  { label:'Custom', totalIn:null, gravelIn:null },
+];
+const FINISHES    = ["Plain Broom","Stamped","Exposed Aggregate"];
+const MPA_OPTIONS = Object.keys(P.concrete);
+const SITE_OPTIONS= ["Grass / Soil","Existing Concrete (break + remove)"];
+
+function fmtCAD(n){
+  return new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:2}).format(n||0);
+}
+function inToM(i){ return i*0.0254; }
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let state = {
+  tab: 'inputs',
+  length: 20, width: 10,
+  presetIdx: 0,
+  customTotal: 8, customGravel: 4,
+  finish: 'Plain Broom',
+  mpa: MPA_OPTIONS[0],
+  siteType: SITE_OPTIONS[0],
+  workDays: 1,
+  useTruck: true, useBobcat: true, useBin: false,
+  useCompactor: true, useJack: false,
+};
+
+function setState(patch){
+  state = {...state, ...patch};
+  render();
+}
+
+// ─── CALCULATION ─────────────────────────────────────────────────────────────
+function calc(){
+  const L = parseFloat(state.length)||0, W = parseFloat(state.width)||0;
+  const isCustom = state.presetIdx === 2;
+  const totalIn  = isCustom ? parseFloat(state.customTotal)||0  : DIG_PRESETS[state.presetIdx].totalIn;
+  const gravelIn = isCustom ? parseFloat(state.customGravel)||0 : DIG_PRESETS[state.presetIdx].gravelIn;
+  const concreteIn = totalIn - gravelIn;
+
+  if(!L||!W||!totalIn||!gravelIn||concreteIn<=0) return null;
+
+  const areaFt2=L*W, areaM2=areaFt2*0.0929;
+  const concM3 = areaM2*inToM(concreteIn)*(1+P.concreteWaste);
+  const concCost = concM3*P.concrete[state.mpa];
+  const deliveryCost = P.concreteDelivery;
+  const gravelM3 = areaM2*inToM(gravelIn)*P.gravelCompactionFactor;
+  const gravelTonnes = gravelM3*P.gravelDensity;
+  const gravelCost = gravelTonnes*P.gravelPerTonne;
+  const spacingFt = P.rebarSpacingIn/12;
+  const totalRunFt = (Math.ceil(L/spacingFt)+1)*W+(Math.ceil(W/spacingFt)+1)*L;
+  const rebarSticks = Math.ceil((totalRunFt/P.rebarStickFt)*(1+P.rebarWaste));
+  const rebarCost = rebarSticks*P.rebarStickCost;
+  const formBoards = Math.ceil((2*(L+W)/P.formBoardFt)*(1+P.formWaste));
+  const formCost = formBoards*P.formBoardCost;
+  const labourCost = P.generalLabour*state.workDays;
+  const isStamped = state.finish==='Stamped', isExposed = state.finish==='Exposed Aggregate';
+  const colorHardenerCost = isStamped?areaFt2*P.colorHardenerPerSqft:0;
+  const releaseCost       = isStamped?areaFt2*P.releaseAgentPerSqft:0;
+  const stampRentalCost   = isStamped?P.stampRental*state.workDays:0;
+  const sealerCost        = isStamped?areaFt2*P.sealerStamped:isExposed?areaFt2*P.sealerExposed:0;
+  const soilCuFt = areaFt2*(totalIn/12);
+  const soilLb = soilCuFt*P.soilLbPerCuFt;
+  const soilYards = soilCuFt/27;
+  const trailerTrips = (state.useBobcat&&!state.useBin)?Math.ceil(soilLb/P.trailerCapacityLb):0;
+  const trailerDumpFee = trailerTrips*P.haltonfeePerTrip;
+  const binsNeeded = state.useBin?Math.ceil(soilYards/P.binYards):0;
+  const binCost = binsNeeded*P.dumpBin;
+  const disposalCost = state.useBin?binCost:trailerDumpFee;
+  const truckCost     = state.useTruck?P.pickupTruck*state.workDays:0;
+  const bobcatCost    = state.useBobcat?P.bobcatTrailer*state.workDays:0;
+  const compactorCost = state.useCompactor?P.plateCompactor*state.workDays:0;
+  const jackCost      = state.useJack?P.jackhammer*state.workDays:0;
+
+  const totalCosts = concCost+deliveryCost+gravelCost+rebarCost+formCost
+    +labourCost+colorHardenerCost+releaseCost+stampRentalCost+sealerCost
+    +disposalCost+truckCost+bobcatCost+compactorCost+jackCost;
+  const yourProfit = totalCosts*P.PROFIT_RATE;
+  const quoteTotal = totalCosts+yourProfit;
+
+  return {
+    areaFt2,areaM2,totalIn,gravelIn,concreteIn,
+    concM3,concCost,deliveryCost,gravelTonnes,gravelCost,
+    rebarSticks,rebarCost,formBoards,formCost,labourCost,
+    colorHardenerCost,releaseCost,stampRentalCost,sealerCost,
+    soilLb,soilYards,trailerTrips,trailerDumpFee,binsNeeded,binCost,disposalCost,
+    truckCost,bobcatCost,compactorCost,jackCost,
+    totalCosts,yourProfit,quoteTotal,isStamped,isExposed,
+  };
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render(){
+  const q = calc();
+  const isCustom   = state.presetIdx===2;
+  const totalIn    = isCustom?parseFloat(state.customTotal)||0:DIG_PRESETS[state.presetIdx].totalIn;
+  const gravelIn   = isCustom?parseFloat(state.customGravel)||0:DIG_PRESETS[state.presetIdx].gravelIn;
+  const concreteIn = totalIn-gravelIn;
+  const needsSealer = q&&(q.isStamped||q.isExposed);
+
+  document.getElementById('root').innerHTML = `
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-wrap">
+      <div class="logo-icon">🏗️</div>
+      <div>
+        <div class="logo-title">CONCRETE QUOTE PRO</div>
+        <div class="logo-sub">GTA · CASH · 2025/26</div>
+      </div>
+    </div>
+    <div class="profit-badge">
+      <div class="profit-badge-label">YOUR PROFIT</div>
+      <div class="profit-badge-num">30%</div>
+      <div class="profit-badge-sub">LOCKED IN</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab ${state.tab==='inputs'?'active':'inactive'}" onclick="setState({tab:'inputs'})">⚙️ INPUTS</div>
+    <div class="tab ${state.tab==='quote'?'active':'inactive'}" onclick="setState({tab:'quote'})">💰 QUOTE</div>
+  </div>
+
+  <!-- INPUTS PANEL -->
+  <div class="panel" style="display:${state.tab==='inputs'?'block':'none'}">
+
+    <div class="section-label">📐 Slab Dimensions</div>
+    ${numInput('length','LENGTH',state.length,'ft','','1','0.5')}
+    ${numInput('width','WIDTH',state.width,'ft','','1','0.5')}
+
+    <div class="section-label">⛏️ Dig & Pour Depth</div>
+    <div class="presets">
+      ${DIG_PRESETS.map((p,i)=>`
+        <button class="preset-btn"
+          style="background:${state.presetIdx===i?'#f5a623':'#1a1a1a'};color:${state.presetIdx===i?'#000':'#777'};font-weight:${state.presetIdx===i?700:400};"
+          onclick="setState({presetIdx:${i}})">${p.label.replace('\n','<br/>')}</button>
+      `).join('')}
+    </div>
+
+    ${!isCustom?`
+      <div class="dig-info">
+        <div class="dig-grid">
+          <div><div class="dig-cell-label">TOTAL DIG</div><div class="dig-cell-val">${totalIn}″</div></div>
+          <div><div class="dig-cell-label">CONCRETE</div><div class="dig-cell-val">${concreteIn}″</div></div>
+          <div><div class="dig-cell-label">GRAVEL</div><div class="dig-cell-val">${gravelIn}″</div></div>
+        </div>
+      </div>
+    `:`
+      ${numInput('customTotal','TOTAL DIG DEPTH',state.customTotal,'in','full depth of hole','1','1')}
+      ${numInput('customGravel','GRAVEL BASE DEPTH',state.customGravel,'in','must be less than total','1','1')}
+      <div class="custom-warn" style="color:${concreteIn>0?'#5a9a70':'#c04040'};background:${concreteIn>0?'#0e1e14':'#1e0e0e'};border:1px solid ${concreteIn>0?'#1e3a28':'#4a1818'}">
+        ${concreteIn>0?`✓ Pour depth: ${concreteIn}″ concrete`:'⚠️ Gravel cannot equal or exceed total dig depth'}
+      </div>
+    `}
+
+    ${totalIn&&gravelIn&&concreteIn>0?`
+      <div class="depth-bar-wrap">
+        <div class="depth-bar">
+          <div class="depth-seg-concrete" style="width:${(concreteIn/totalIn*100).toFixed(0)}%">
+            <span class="depth-seg-label">${concreteIn}″ concrete</span>
+          </div>
+          <div class="depth-seg-gravel" style="width:${(gravelIn/totalIn*100).toFixed(0)}%">
+            <span class="depth-seg-label" style="color:#e0c88a">${gravelIn}″ gravel</span>
+          </div>
+        </div>
+        <div class="depth-note">Total dig: ${totalIn}″ · Full hole depth</div>
+      </div>
+    `:''}
+
+    <div class="section-label">🧱 Concrete Spec</div>
+    ${selInput('finish','FINISH TYPE',state.finish,FINISHES)}
+    ${selInput('mpa','CONCRETE STRENGTH',state.mpa,MPA_OPTIONS)}
+
+    <div class="section-label">🏚️ Site Condition</div>
+    ${selInput('siteType','WHAT NEEDS REMOVAL?',state.siteType,SITE_OPTIONS,'','site_change')}
+
+    <div class="section-label">👷 Schedule</div>
+    ${numInput('workDays','WORKING DAYS ON SITE',state.workDays,'days','helper @ $150/day','1','1')}
+
+    <div class="section-label">🚛 Equipment & Disposal</div>
+    ${toggle('useTruck',state.useTruck,`Ford F-250 Rental — $${P.pickupTruck}/day`,'Material runs + site supervision')}
+    ${toggle('useBobcat',state.useBobcat,`Dump Trailer + Bobcat — $${P.bobcatTrailer}/day`,`5-ton trailer · trips to Halton @ $${P.haltonfeePerTrip}/trip`,'bobcat_toggle')}
+    ${toggle('useBin',state.useBin,`14-yd Dump Bins — $${P.dumpBin}/bin`,'Bins self-haul · no trips needed','bin_toggle')}
+    ${toggle('useCompactor',state.useCompactor,`Plate Compactor (HD) — $${P.plateCompactor}/day`,'Home Depot · compact gravel base')}
+    ${toggle('useJack',state.useJack,`Jackhammer Hilti TE3000 (HD) — $${P.jackhammer}/day`,'Existing concrete demo only')}
+  </div>
+
+  <!-- QUOTE PANEL -->
+  <div class="panel" style="display:${state.tab==='quote'?'block':'none'}">
+    ${!q?`<div class="empty">Enter dimensions on the Inputs tab to generate a quote</div>`:`
+
+      <div class="section-label" style="margin-top:4px">📋 Snapshot</div>
+      <div class="snapshot">
+        ${[
+          ['Slab Area',`${q.areaFt2.toFixed(0)} ft² / ${q.areaM2.toFixed(1)} m²`],
+          ['Total Dig',`${q.totalIn}″ deep`],
+          ['Pour Depth',`${q.concreteIn}″ → ${q.concM3.toFixed(2)} m³`],
+          ['Gravel Base',`${q.gravelIn}″ → ${q.gravelTonnes.toFixed(1)} t`],
+          ['Rebar',`${q.rebarSticks} sticks 10M FRP`],
+          ['Forms',`${q.formBoards} × 8ft 2×4`],
+          ['Soil Out',`${q.soilYards.toFixed(1)} yd³ · ${(q.soilLb/2000).toFixed(2)} tons`],
+          ['Disposal',state.useBin?`${q.binsNeeded} bin${q.binsNeeded!==1?'s':''}`:state.useBobcat?`${q.trailerTrips} trailer trip${q.trailerTrips!==1?'s':''}`:'-'],
+        ].map(([k,v])=>`<div><div class="snap-k">${k.toUpperCase()}</div><div class="snap-v">${v}</div></div>`).join('')}
+      </div>
+
+      <!-- TRIP CALCULATOR -->
+      <div class="section-label">🗑️ Disposal Calculator</div>
+      <div class="trip-box">
+        <div class="trip-header">🚛 DUMP TRAILER TRIP CALCULATOR</div>
+        <div class="trip-stats">
+          <div class="trip-stat"><div class="trip-stat-k">TOTAL SOIL</div><div class="trip-stat-v">${(q.soilLb/2000).toFixed(2)} tons</div></div>
+          <div class="trip-stat"><div class="trip-stat-k">TRAILER MAX</div><div class="trip-stat-v">5.0 tons</div></div>
+          <div class="trip-stat"><div class="trip-stat-k">DUMP FEE</div><div class="trip-stat-v">$${P.haltonfeePerTrip}/trip</div></div>
+        </div>
+        ${state.useBobcat&&!state.useBin?`
+          <div style="font-size:8px;color:#666;letter-spacing:0.08em;margin-bottom:6px">TRIPS TO HALTON WASTE FACILITY</div>
+          <div class="trip-dots">
+            ${Array.from({length:q.trailerTrips}).map((_,i)=>`<div class="trip-dot">${i+1}</div>`).join('')}
+          </div>
+          <div class="trip-summary">
+            <span style="color:#f5a623;font-weight:700">${q.trailerTrips} trip${q.trailerTrips!==1?'s':''}</span>
+            × ${fmtCAD(P.haltonfeePerTrip)} = <span style="color:#f5a623;font-weight:700">${fmtCAD(q.trailerDumpFee)}</span>
+          </div>
+          ${Array.from({length:q.trailerTrips}).map((_,i)=>{
+            const loaded=Math.min(P.trailerCapacityLb,q.soilLb-i*P.trailerCapacityLb);
+            const pct=(loaded/P.trailerCapacityLb*100).toFixed(0);
+            const col=pct>90?'#f5a623':pct>60?'#c9821a':'#8a5a10';
+            return `<div class="trip-bar-row">
+              <div class="trip-bar-label"><span>Trip ${i+1}</span><span style="font-family:'DM Mono',monospace">${(loaded/2000).toFixed(2)} tons (${pct}% full)</span></div>
+              <div class="trip-bar-track"><div class="trip-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+            </div>`;
+          }).join('')}
+        `:state.useBin?`
+          <div style="font-size:11px;color:#888">
+            Using <span style="color:#f5a623;font-weight:700">${q.binsNeeded} dump bin${q.binsNeeded!==1?'s':''}</span>
+            × ${fmtCAD(P.dumpBin)} = <span style="color:#f5a623;font-weight:700">${fmtCAD(q.binCost)}</span>
+          </div>
+          <div style="font-size:9px;color:#555;margin-top:4px">Bins self-haul — no trips on your end</div>
+        `:`<div style="font-size:11px;color:#555;font-style:italic">Enable dump trailer+bobcat or bins above to calculate disposal</div>`}
+      </div>
+
+      <!-- COST BREAKDOWN -->
+      <div class="section-label">💰 Cost Breakdown</div>
+      <div class="breakdown">
+        <div class="cat-label">CONCRETE</div>
+        ${costRow(`Ready-Mix (${fmtCAD(P.concrete[state.mpa])}/m³)`,q.concCost,true,`${q.concM3.toFixed(2)} m³ · ${q.concreteIn}″`)}
+        ${costRow('Concrete Delivery',q.deliveryCost,true)}
+
+        <div class="cat-label">BASE MATERIALS</div>
+        ${costRow(`Granular A Gravel ($${P.gravelPerTonne}/t)`,q.gravelCost,true,`${q.gravelTonnes.toFixed(1)} t · ${q.gravelIn}″`)}
+        ${costRow(`10M FRP Rebar ($${P.rebarStickCost}/stick)`,q.rebarCost,true,`${q.rebarSticks} sticks`)}
+        ${costRow(`2×4 Forms ($${P.formBoardCost}/8ft)`,q.formCost,true,`${q.formBoards} boards`)}
+
+        ${q.isStamped?`
+          <div class="cat-label">STAMPED MATERIALS</div>
+          ${costRow(`Colour Hardener (~$${P.colorHardenerPerSqft}/ft²)`,q.colorHardenerCost,true)}
+          ${costRow(`Release Agent (~$${P.releaseAgentPerSqft}/ft²)`,q.releaseCost,true)}
+          ${costRow(`Stamp Mat Rental ($${P.stampRental}/day)`,q.stampRentalCost,true)}
+        `:''}
+
+        ${needsSealer?`
+          <div class="cat-label">SEALER</div>
+          ${costRow(q.isStamped?`Acrylic Cure & Seal (~$${P.sealerStamped}/ft²)`:`Wet-Look Sealer (~$${P.sealerExposed}/ft²)`,q.sealerCost,true)}
+        `:''}
+
+        <div class="cat-label">LABOUR & EQUIPMENT</div>
+        ${costRow(`Helper Labour ($${P.generalLabour}/day)`,q.labourCost,true,`${state.workDays}d`)}
+        ${q.truckCost>0?costRow(`Ford F-250 ($${P.pickupTruck}/day)`,q.truckCost,true):''}
+        ${q.bobcatCost>0?costRow(`Dump Trailer + Bobcat ($${P.bobcatTrailer}/day)`,q.bobcatCost,true):''}
+        ${q.compactorCost>0?costRow(`Plate Compactor HD ($${P.plateCompactor}/day)`,q.compactorCost,true):''}
+        ${q.jackCost>0?costRow(`Jackhammer HD ($${P.jackhammer}/day)`,q.jackCost,true):''}
+
+        <div class="cat-label">DISPOSAL</div>
+        ${state.useBin
+          ?costRow(`Dump Bins (${q.binsNeeded} × $${P.dumpBin})`,q.binCost,true)
+          :state.useBobcat
+            ?costRow(`Halton Waste (${q.trailerTrips} trip${q.trailerTrips!==1?'s':''} × $${P.haltonfeePerTrip})`,q.trailerDumpFee,true)
+            :costRow('No disposal selected',0,true)
+        }
+
+        <!-- Totals -->
+        <div style="height:8px"></div>
+        <div class="cost-row bold">
+          <span class="cost-label bold">TOTAL COSTS</span>
+          <span class="cost-val bold">${fmtCAD(q.totalCosts)}</span>
+        </div>
+
+        <div class="profit-row">
+          <div>
+            <div class="profit-row-label">YOUR PROFIT — 30%</div>
+            <div class="profit-row-sub">Take-home on this job</div>
+          </div>
+          <div class="profit-row-val">${fmtCAD(q.yourProfit)}</div>
+        </div>
+      </div>
+
+      <!-- GRAND TOTAL -->
+      <div class="grand-total">
+        <div class="grand-label">QUOTE TO CLIENT — CASH · NO TAX</div>
+        <div class="grand-amount">${fmtCAD(q.quoteTotal)}</div>
+        <div class="grand-stats">
+          ${[['Per ft²',fmtCAD(q.quoteTotal/q.areaFt2)],['Per m²',fmtCAD(q.quoteTotal/q.areaM2)],['Your Costs',fmtCAD(q.totalCosts)],['Your Profit',fmtCAD(q.yourProfit)]].map(([k,v])=>`
+            <div>
+              <div class="grand-stat-k">${k.toUpperCase()}</div>
+              <div class="grand-stat-v${k==='Your Profit'?' highlight':''}">${v}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        ⚠️ Dump trailer: 5 tons (10,000 lb) max. Soil: ~100 lb/ft³ loose. Concrete: Redimix/Dufferin GTA 2025/26. Gravel: ~$42/t Granular A. HD Rentals: compactor ~$95/day, Hilti TE3000 ~$135/day. Colour hardener ~$0.55/ft², release ~$0.18/ft², sealer ~$0.30–0.35/ft². Halton waste: $10/trip. All prices subject to change.
+      </div>
+    `}
+  </div>
+  `;
+
+  // Reattach events after render
+  attachEvents();
+}
+
+// ─── HTML HELPERS ────────────────────────────────────────────────────────────
+function numInput(id,label,val,suffix,help,min,step){
+  return `<div class="input-group">
+    <div class="input-label-row">
+      <div class="input-label">${label}</div>
+      ${help?`<div class="input-help">${help}</div>`:''}
+    </div>
+    <div class="input-wrap">
+      <input type="number" id="inp_${id}" value="${val}" min="${min}" step="${step}" inputmode="decimal"/>
+      ${suffix?`<span class="input-suffix">${suffix}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function selInput(id,label,val,options,help,specialId){
+  return `<div class="input-group">
+    <div class="input-label-row">
+      <div class="input-label">${label}</div>
+      ${help?`<div class="input-help">${help}</div>`:''}
+    </div>
+    <div class="input-wrap">
+      <select id="${specialId||('sel_'+id)}">
+        ${options.map(o=>`<option value="${o}"${o===val?' selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>
+  </div>`;
+}
+
+function toggle(id,checked,label,sub,specialId){
+  return `<div class="toggle-row" onclick="${specialId||('tog_'+id)}()">
+    <div class="toggle-track" style="background:${checked?'#f5a623':'#252525'}">
+      <div class="toggle-thumb" style="left:${checked?'19px':'3px'}"></div>
+    </div>
+    <div>
+      <div class="toggle-label" style="color:${checked?'#ddd':'#666'}">${label}</div>
+      ${sub?`<div class="toggle-sub">${sub}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function costRow(label,val,indent,sub){
+  return `<div class="cost-row${indent?' indented':''}">
+    <span class="cost-label">${label}${sub?`<span class="cost-sub">${sub}</span>`:''}</span>
+    <span class="cost-val">${fmtCAD(val)}</span>
+  </div>`;
+}
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+function attachEvents(){
+  // Numeric inputs
+  ['length','width','workDays','customTotal','customGravel'].forEach(id=>{
+    const el = document.getElementById('inp_'+id);
+    if(el) el.addEventListener('change', e=>setState({[id]:e.target.value}));
+  });
+  // Selects
+  const finishEl = document.getElementById('sel_finish');
+  if(finishEl) finishEl.addEventListener('change',e=>setState({finish:e.target.value}));
+  const mpaEl = document.getElementById('sel_mpa');
+  if(mpaEl) mpaEl.addEventListener('change',e=>setState({mpa:e.target.value}));
+}
+
+// Toggle functions (called via onclick in HTML string)
+window.tog_useTruck     = ()=>setState({useTruck:!state.useTruck});
+window.tog_useCompactor = ()=>setState({useCompactor:!state.useCompactor});
+window.tog_useJack      = ()=>setState({useJack:!state.useJack});
+window.bobcat_toggle    = ()=>setState({useBobcat:!state.useBobcat, useBin: state.useBobcat?state.useBin:false});
+window.bin_toggle       = ()=>setState({useBin:!state.useBin, useBobcat: state.useBin?state.useBobcat:false});
+window.site_change      = ()=>{
+  const v = document.getElementById('site_change').value;
+  setState({siteType:v, useJack:v.includes('Concrete')});
+};
+
+// Initial render
+render();
+
+// ─── SERVICE WORKER ──────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE = 'cqp-v1';
+    self.addEventListener('install', e=>{
+      e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['.','./'])));
+      self.skipWaiting();
+    });
+    self.addEventListener('fetch', e=>{
+      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)).catch(()=>caches.match('.')));
+    });
+  `;
+  const blob = new Blob([swCode],{type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+</script>
+</body>
+</html>
